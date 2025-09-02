@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hollywood Comedy Movie Recommender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            height: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 25px;
+        }
+
+        .question-counter {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .movie-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .movie-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffd93d;
+        }
+
+        .movie-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .movie-year {
+            font-size: 1em;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .movie-director {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+
+        .movie-description {
+            font-size: 0.85em;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .rating {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .recommendations {
+            display: none;
+        }
+
+        .recommendation-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .welcome-screen {
+            text-align: center;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 30px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .selection-screen {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .movie-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="welcome-screen">
+            <h1>🎬 Hollywood Comedy Movie Recommender</h1>
+            <p class="subtitle">Discover your perfect comedy movie through personalized preferences!</p>
+            <p style="opacity: 0.8; margin-bottom: 20px;">
+                We'll show you pairs of popular comedy movies. Simply choose the one you prefer in each round.
+                After 50 choices, we'll recommend 5 movies perfectly tailored to your taste!
+            </p>
+            <button class="start-btn" onclick="startRecommendation()">Start Movie Selection</button>
+        </div>
+
+        <!-- Selection Screen -->
+        <div id="selectionScreen" class="selection-screen">
+            <h1>🎬 Choose Your Preference</h1>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="question-counter">
+                Question <span id="currentQuestion">1</span> of 50
+            </div>
+            
+            <div class="movie-selection" id="movieSelection">
+                <!-- Movie cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Recommendations Screen -->
+        <div id="recommendationsScreen" class="recommendations">
+            <h1>🎉 Your Personalized Movie Recommendations</h1>
+            <p class="subtitle">Based on your preferences, here are 5 comedy movies you'll love:</p>
+            
+            <div id="recommendationsList">
+                <!-- Recommendations will be populated here -->
+            </div>
+            
+            <button class="restart-btn" onclick="restartRecommendation()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Movie database - comprehensive list of Hollywood comedy movies from IMDB
+        const moviesDatabase = [
+            {"title": "Monty Python and the Holy Grail", "year": 1975, "director": "Terry Gilliam, Terry Jones", "rating": 8.2, "genre": "Comedy", "description": "King Arthur and his Knights of the Round Table embark on a surreal, low-budget search for the Holy Grail."},
+            {"title": "Airplane!", "year": 1980, "director": "Jim Abrahams, David Zucker, Jerry Zucker", "rating": 7.7, "genre": "Comedy", "description": "After the crew becomes sick with food poisoning, a neurotic ex-fighter pilot must safely land a commercial airplane."},
+            {"title": "Blazing Saddles", "year": 1974, "director": "Mel Brooks", "rating": 7.7, "genre": "Comedy", "description": "A corrupt politician appoints a black sheriff, who promptly becomes his most formidable adversary."},
+            {"title": "Caddyshack", "year": 1980, "director": "Harold Ramis", "rating": 7.2, "genre": "Comedy", "description": "An exclusive golf course has to deal with a flatulent new member and a destructive dancing gopher."},
+            {"title": "Dr. Strangelove", "year": 1964, "director": "Stanley Kubrick", "rating": 8.3, "genre": "Comedy", "description": "A mentally unstable American general orders a hydrogen bomb attack on the Soviet Union."},
+            {"title": "Annie Hall", "year": 1977, "director": "Woody Allen", "rating": 7.9, "genre": "Comedy", "description": "A divorced Jewish comedian reflects on his relationship with ex-lover Annie Hall."},
+            {"title": "The Jerk", "year": 1979, "director": "Carl Reiner", "rating": 7.1, "genre": "Comedy", "description": "A simpleminded, sheltered country boy suddenly decides to leave his family home to experience life in the big city."},
+            {"title": "The Blues Brothers", "year": 1980, "director": "John Landis", "rating": 7.9, "genre": "Comedy", "description": "Jake Blues rejoins his brother Elwood to reunite their old R&B band and save the Catholic home."},
+            {"title": "Young Frankenstein", "year": 1974, "director": "Mel Brooks", "rating": 8.0, "genre": "Comedy", "description": "An American grandson of the infamous scientist discovers the process that reanimates a dead body."},
+            {"title": "Dumb and Dumber", "year": 1994, "director": "Peter Farrelly, Bobby Farrelly", "rating": 7.3, "genre": "Comedy", "description": "A dumb limo driver and his dumber friend set out on a hilarious cross-country road trip to Aspen."},
+            {"title": "National Lampoon's Animal House", "year": 1978, "director": "John Landis", "rating": 7.4, "genre": "Comedy", "description": "Dean Vernon Wormer is determined to expel the entire Delta Tau Chi Fraternity."},
+            {"title": "Office Space", "year": 1999, "director": "Mike Judge", "rating": 7.6, "genre": "Comedy", "description": "Three company workers who hate their jobs decide to rebel against their greedy boss."},
+            {"title": "The Big Lebowski", "year": 1998, "director": "Joel Coen, Ethan Coen", "rating": 8.1, "genre": "Comedy", "description": "Jeff 'The Dude' Lebowski seeks restitution for his ruined rug and enlists his bowling buddies to help."},
+            {"title": "Spaceballs", "year": 1987, "director": "Mel Brooks", "rating": 7.1, "genre": "Comedy", "description": "A star-pilot for hire must rescue a princess and save Planet Druidia from the evil Spaceballs."},
+            {"title": "The Naked Gun", "year": 1988, "director": "David Zucker", "rating": 7.6, "genre": "Comedy", "description": "Incompetent police Detective Frank Drebin must foil an attempt to assassinate Queen Elizabeth II."},
+            {"title": "Planes, Trains & Automobiles", "year": 1987, "director": "John Hughes", "rating": 7.6, "genre": "Comedy", "description": "A Chicago advertising man must struggle to travel home from New York for Thanksgiving."},
+            {"title": "Clerks", "year": 1994, "director": "Kevin Smith", "rating": 7.7, "genre": "Comedy", "description": "A day in the lives of two convenience clerks named Dante and Randal as they annoy customers."},
+            {"title": "Superbad", "year": 2007, "director": "Greg Mottola", "rating": 7.6, "genre": "Comedy", "description": "Two co-dependent high school seniors are forced to deal with separation anxiety."},
+            {"title": "The Hangover", "year": 2009, "director": "Todd Phillips", "rating": 7.7, "genre": "Comedy", "description": "Three buddies wake up from a bachelor party in Las Vegas with no memory of the previous night."},
+            {"title": "The 40-Year-Old Virgin", "year": 2005, "director": "Judd Apatow", "rating": 7.1, "genre": "Comedy", "description": "A nerdy guy who's never 'done the deed' finds the pressure mounting when he meets a single mother."},
+            {"title": "Old School", "year": 2003, "director": "Todd Phillips", "rating": 7.0, "genre": "Comedy", "description": "Three friends attempt to recapture their glory days by opening up a fraternity."},
+            {"title": "American Pie", "year": 1999, "director": "Paul Weitz", "rating": 7.0, "genre": "Comedy", "description": "Four teenage boys enter a pact to lose their virginity by prom night."},
+            {"title": "Dodgeball: A True Underdog Story", "year": 2004, "director": "Rawson Marshall Thurber", "rating": 6.7, "genre": "Comedy", "description": "A group of misfits enter a Las Vegas dodgeball tournament to save their local gym."},
+            {"title": "Anchorman: The Legend of Ron Burgundy", "year": 2004, "director": "Adam McKay", "rating": 7.1, "genre": "Comedy", "description": "An anchorman's stint as San Diego's top-rated newsreader is challenged by an ambitious newswoman."},
+            {"title": "Borat", "year": 2006, "director": "Larry Charles", "rating": 7.4, "genre": "Comedy", "description": "Kazakh TV talking head Borat is dispatched to the United States to report on the greatest country."},
+            {"title": "Happy Gilmore", "year": 1996, "director": "Dennis Dugan", "rating": 7.0, "genre": "Comedy", "description": "A bad tempered hockey player takes his talents to golf to get his grandmother's house back."},
+            {"title": "Ted", "year": 2012, "director": "Seth MacFarlane", "rating": 6.9, "genre": "Comedy", "description": "A man must decide between keeping his relationship with his teddy bear Ted or his girlfriend."},
+            {"title": "Ferris Bueller's Day Off", "year": 1986, "director": "John Hughes", "rating": 7.8, "genre": "Comedy", "description": "A brash high school senior is determined to enjoy an epic day roaring around Chicago."},
+            {"title": "Step Brothers", "year": 2008, "director": "Adam McKay", "rating": 6.9, "genre": "Comedy", "description": "Two aimless middle-aged losers are forced to become roommates when their parents marry."},
+            {"title": "Wedding Crashers", "year": 2005, "director": "David Dobkin", "rating": 7.0, "genre": "Comedy", "description": "A pair of committed womanizers sneak into weddings to take advantage of the romantic atmosphere."},
+            {"title": "Knocked Up", "year": 2007, "director": "Judd Apatow", "rating": 6.9, "genre": "Comedy", "description": "A one-night stand shows up eight weeks later to tell Ben she's pregnant with his child."},
+            {"title": "Horrible Bosses", "year": 2011, "director": "Seth Gordon", "rating": 6.9, "genre": "Comedy", "description": "Three friends conspire to murder their awful bosses."},
+            {"title": "Shaun of the Dead", "year": 2004, "director": "Edgar Wright", "rating": 7.9, "genre": "Comedy", "description": "A London electronics salesman's life is disrupted by the zombie apocalypse."},
+            {"title": "Hot Fuzz", "year": 2007, "director": "Edgar Wright", "rating": 7.8, "genre": "Comedy", "description": "An overachieving London police sergeant is transferred to a village with grisly murders."},
+            {"title": "Kiss Kiss Bang Bang", "year": 2005, "director": "Shane Black", "rating": 7.5, "genre": "Comedy", "description": "A New York thief is sent to Hollywood to train under a private eye for a movie role."},
+            {"title": "The Grand Budapest Hotel", "year": 2014, "director": "Wes Anderson", "rating": 8.1, "genre": "Comedy", "description": "A writer encounters the owner of an aging high-class hotel."},
+            {"title": "Deadpool", "year": 2016, "director": "Tim Miller", "rating": 8.0, "genre": "Comedy", "description": "A wisecracking mercenary becomes immortal yet hideously scarred."},
+            {"title": "We're the Millers", "year": 2013, "director": "Rawson Marshall Thurber", "rating": 7.0, "genre": "Comedy", "description": "A pot dealer creates a fake family to move a huge shipment of weed from Mexico."},
+            {"title": "Zombieland", "year": 2009, "director": "Ruben Fleischer", "rating": 7.5, "genre": "Comedy", "description": "A shy student and friends join forces in a trek across zombie-filled America."},
+            {"title": "This Is the End", "year": 2013, "director": "Evan Goldberg, Seth Rogen", "rating": 6.6, "genre": "Comedy", "description": "Six Los Angeles celebrities are stuck in James Franco's house during the apocalypse."},
+            {"title": "Moonrise Kingdom", "year": 2012, "director": "Wes Anderson", "rating": 7.8, "genre": "Comedy", "description": "Two 12-year-olds fall in love and elope into the wilderness."},
+            {"title": "EuroTrip", "year": 2004, "director": "Jeff Schaffer", "rating": 6.6, "genre": "Comedy", "description": "A high school grad decides to embark on an overseas adventure in Europe."},
+            {"title": "Ghostbusters", "year": 1984, "director": "Ivan Reitman", "rating": 7.8, "genre": "Comedy", "description": "Three paranormal scientists start a ghostbusting business in New York."},
+            {"title": "Coming to America", "year": 1988, "director": "John Landis", "rating": 7.1, "genre": "Comedy", "description": "An African prince travels to America to find a bride."},
+            {"title": "Beverly Hills Cop", "year": 1984, "director": "Martin Brest", "rating": 7.4, "genre": "Comedy", "description": "A freewheeling Detroit cop pursues a murder case in Beverly Hills."},
+            {"title": "Groundhog Day", "year": 1993, "director": "Harold Ramis", "rating": 8.0, "genre": "Comedy", "description": "A weatherman finds himself in a time loop on Groundhog Day."},
+            {"title": "The Truman Show", "year": 1998, "director": "Peter Weir", "rating": 8.2, "genre": "Comedy", "description": "An insurance salesman suspects his whole life is actually a reality TV show."},
+            {"title": "Liar Liar", "year": 1997, "director": "Tom Shadyac", "rating": 6.9, "genre": "Comedy", "description": "A lawyer finds himself unable to lie for 24 hours."},
+            {"title": "Ace Ventura: Pet Detective", "year": 1994, "director": "Tom Shadyac", "rating": 6.9, "genre": "Comedy", "description": "A goofy detective specializing in animals goes in search of a missing mascot."},
+            {"title": "Bruce Almighty", "year": 2003, "director": "Tom Shadyac", "rating": 6.8, "genre": "Comedy", "description": "A whiny news reporter is given the chance to step into God's shoes."},
+            {"title": "Meet the Parents", "year": 2000, "director": "Jay Roach", "rating": 7.0, "genre": "Comedy", "description": "A male nurse meets his girlfriend's parents before proposing marriage."},
+            {"title": "There's Something About Mary", "year": 1998, "director": "Peter Farrelly, Bobby Farrelly", "rating": 7.1, "genre": "Comedy", "description": "A man gets a chance to meet up with his dream girl from high school."},
+            {"title": "Austin Powers: International Man of Mystery", "year": 1997, "director": "Jay Roach", "rating": 7.0, "genre": "Comedy", "description": "A 1960s hipster secret agent is brought out of cryofreeze to oppose his nemesis."},
+            {"title": "Zoolander", "year": 2001, "director": "Ben Stiller", "rating": 6.5, "genre": "Comedy", "description": "A dim-witted male model is brainwashed to kill the Prime Minister of Malaysia."},
+            {"title": "Napoleon Dynamite", "year": 2004, "director": "Jared Hess", "rating": 6.9, "genre": "Comedy", "description": "A listless and alienated teenager decides to help his new friend win the class presidency."},
+            {"title": "Talladega Nights", "year": 2006, "director": "Adam McKay", "rating": 6.6, "genre": "Comedy", "description": "Number one NASCAR driver Ricky Bobby stays atop the heap thanks to a pact with his best friend."},
+            {"title": "Elf", "year": 2003, "director": "Jon Favreau", "rating": 7.1, "genre": "Comedy", "description": "A man raised as an elf at the North Pole is sent to the U.S. in search of his true identity."},
+            {"title": "School of Rock", "year": 2003, "director": "Richard Linklater", "rating": 7.2, "genre": "Comedy", "description": "A struggling musician poses as a substitute teacher at a prestigious prep school."},
+            {"title": "Pineapple Express", "year": 2008, "director": "David Gordon Green", "rating": 6.9, "genre": "Comedy", "description": "A process server and his marijuana dealer wind up on the run from hitmen."},
+            {"title": "Tropic Thunder", "year": 2008, "director": "Ben Stiller", "rating": 7.1, "genre": "Comedy", "description": "A group of self-absorbed actors set out to make the most expensive war film."},
+            {"title": "Role Models", "year": 2008, "director": "David Wain", "rating": 6.8, "genre": "Comedy", "description": "Wild behavior forces a pair of energy drink reps to enroll in a Big Brother program."},
+            {"title": "I Love You, Man", "year": 2009, "director": "John Hamburg", "rating": 7.0, "genre": "Comedy", "description": "A man in need of a best man for his wedding seeks out a male friend."},
+            {"title": "Forgetting Sarah Marshall", "year": 2008, "director": "Nicholas Stoller", "rating": 7.1, "genre": "Comedy", "description": "A musician's life spirals out of control when his TV star girlfriend leaves him."},
+            {"title": "Get Him to the Greek", "year": 2010, "director": "Nicholas Stoller", "rating": 6.3, "genre": "Comedy", "description": "A record company intern must get an unruly rock star to Los Angeles for a concert."},
+            {"title": "The Other Guys", "year": 2010, "director": "Adam McKay", "rating": 6.7, "genre": "Comedy", "description": "Two mismatched New York City detectives seize an opportunity to step up."},
+            {"title": "Due Date", "year": 2010, "director": "Todd Phillips", "rating": 6.5, "genre": "Comedy", "description": "A high-strung father-to-be is forced to hitch a ride with an aspiring actor."},
+            {"title": "The Heat", "year": 2013, "director": "Paul Feig", "rating": 6.6, "genre": "Comedy", "description": "An uptight FBI agent is paired with a foul-mouthed Boston cop."},
+            {"title": "21 Jump Street", "year": 2012, "director": "Phil Lord, Christopher Miller", "rating": 7.2, "genre": "Comedy", "description": "Two underachieving cops are sent back to a local high school to blend in and investigate."},
+            {"title": "22 Jump Street", "year": 2014, "director": "Phil Lord, Christopher Miller", "rating": 7.0, "genre": "Comedy", "description": "The Jump Street cops go undercover at a local college."},
+            {"title": "Neighbors", "year": 2014, "director": "Nicholas Stoller", "rating": 6.3, "genre": "Comedy", "description": "A couple with a newborn baby face unexpected difficulties when they are forced to live next to a fraternity house."},
+            {"title": "Game Night", "year": 2018, "director": "John Francis Daley, Jonathan Goldstein", "rating": 6.9, "genre": "Comedy", "description": "A group of friends who meet regularly for game nights find themselves in a real-life mystery."},
+            {"title": "Booksmart", "year": 2019, "director": "Olivia Wilde", "rating": 7.1, "genre": "Comedy", "description": "Two academic teenage superstars realize they should have worked less and played more."},
+            {"title": "Knives Out", "year": 2019, "director": "Rian Johnson", "rating": 7.9, "genre": "Comedy", "description": "A detective investigates the death of a patriarch of an eccentric, combative family."},
+            {"title": "Palm Springs", "year": 2020, "director": "Max Barbakow", "rating": 7.4, "genre": "Comedy", "description": "Two strangers get stuck in a time loop and must repeat the same day over and over."}
+        ];
+
+        // Application state
+        let currentQuestion = 1;
+        let maxQuestions = 50;
+        let userPreferences = [];
+        let usedMoviePairs = new Set();
+        let currentPair = [];
+
+        function startRecommendation() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('selectionScreen').style.display = 'block';
+            currentQuestion = 1;
+            userPreferences = [];
+            usedMoviePairs = new Set();
+            updateProgress();
+            showNextMoviePair();
+        }
+
+        function getRandomMoviePair() {
+            let attempts = 0;
+            let maxAttempts = 100;
+            
+            while (attempts < maxAttempts) {
+                const movie1 = moviesDatabase[Math.floor(Math.random() * moviesDatabase.length)];
+                const movie2 = moviesDatabase[Math.floor(Math.random() * moviesDatabase.length)];
+                
+                if (movie1.title !== movie2.title) {
+                    const pairKey = [movie1.title, movie2.title].sort().join('-');
+                    
+                    if (!usedMoviePairs.has(pairKey)) {
+                        usedMoviePairs.add(pairKey);
+                        return [movie1, movie2];
+                    }
+                }
+                attempts++;
+            }
+            
+            // Fallback: return any two different movies
+            const movie1 = moviesDatabase[Math.floor(Math.random() * moviesDatabase.length)];
+            let movie2 = moviesDatabase[Math.floor(Math.random() * moviesDatabase.length)];
+            while (movie2.title === movie1.title) {
+                movie2 = moviesDatabase[Math.floor(Math.random() * moviesDatabase.length)];
+            }
+            return [movie1, movie2];
+        }
+
+        function showNextMoviePair() {
+            if (currentQuestion > maxQuestions) {
+                showRecommendations();
+                return;
+            }
+
+            currentPair = getRandomMoviePair();
+            updateMovieSelection();
+        }
+
+        function updateMovieSelection() {
+            const movieSelection = document.getElementById('movieSelection');
+            movieSelection.innerHTML = '';
+
+            currentPair.forEach((movie, index) => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+                movieCard.onclick = () => selectMovie(movie, index);
+                
+                movieCard.innerHTML = `
+                    <div class="rating">⭐ ${movie.rating}</div>
+                    <div class="movie-title">${movie.title}</div>
+                    <div class="movie-year">(${movie.year})</div>
+                    <div class="movie-director">Directed by ${movie.director}</div>
+                    <div class="movie-description">${movie.description}</div>
+                `;
+                
+                movieSelection.appendChild(movieCard);
+            });
+        }
+
+        function selectMovie(selectedMovie, index) {
+            userPreferences.push({
+                selected: selectedMovie,
+                rejected: currentPair[1 - index],
+                question: currentQuestion
+            });
+
+            currentQuestion++;
+            updateProgress();
+            
+            setTimeout(() => {
+                showNextMoviePair();
+            }, 300);
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion - 1) / maxQuestions) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('currentQuestion').textContent = currentQuestion;
+        }
+
+        function analyzePreferences() {
+            const preferences = {
+                directors: {},
+                years: {},
+                ratings: [],
+                selectedMovies: []
+            };
+
+            userPreferences.forEach(pref => {
+                const movie = pref.selected;
+                
+                // Track director preferences
+                if (preferences.directors[movie.director]) {
+                    preferences.directors[movie.director]++;
+                } else {
+                    preferences.directors[movie.director] = 1;
+                }
+                
+                // Track decade preferences
+                const decade = Math.floor(movie.year / 10) * 10;
+                if (preferences.years[decade]) {
+                    preferences.years[decade]++;
+                } else {
+                    preferences.years[decade] = 1;
+                }
+                
+                // Track rating preferences
+                preferences.ratings.push(movie.rating);
+                preferences.selectedMovies.push(movie.title);
+            });
+
+            return preferences;
+        }
+
+        function generateRecommendations() {
+            const preferences = analyzePreferences();
+            const recommendations = [];
+            
+            // Get top directors
+            const topDirectors = Object.entries(preferences.directors)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(entry => entry[0]);
+            
+            // Get preferred decades
+            const topDecades = Object.entries(preferences.years)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 2)
+                .map(entry => parseInt(entry[0]));
+            
+            // Calculate average preferred rating
+            const avgRating = preferences.ratings.reduce((a, b) => a + b, 0) / preferences.ratings.length;
+            
+            // Find movies that match preferences but weren't selected
+            const candidateMovies = moviesDatabase.filter(movie => {
+                return !preferences.selectedMovies.includes(movie.title);
+            });
+            
+            // Score movies based on preferences
+            const scoredMovies = candidateMovies.map(movie => {
+                let score = 0;
+                
+                // Director match (high weight)
+                if (topDirectors.includes(movie.director)) {
+                    score += 3;
+                }
+                
+                // Decade match (medium weight)
+                const movieDecade = Math.floor(movie.year / 10) * 10;
+                if (topDecades.includes(movieDecade)) {
+                    score += 2;
+                }
+                
+                // Rating similarity (medium weight)
+                const ratingDiff = Math.abs(movie.rating - avgRating);
+                if (ratingDiff <= 0.5) {
+                    score += 2;
+                } else if (ratingDiff <= 1.0) {
+                    score += 1;
+                }
+                
+                // Prefer highly rated movies (low weight)
+                if (movie.rating >= 7.5) {
+                    score += 1;
+                }
+                
+                return { ...movie, score };
+            });
+            
+            // Sort by score and get top 5
+            scoredMovies.sort((a, b) => b.score - a.score);
+            
+            // If we don't have enough high-scoring movies, fill with highest-rated movies
+            const topRecommendations = scoredMovies.slice(0, 5);
+            
+            if (topRecommendations.length < 5) {
+                const additionalMovies = candidateMovies
+                    .filter(movie => !topRecommendations.some(rec => rec.title === movie.title))
+                    .sort((a, b) => b.rating - a.rating)
+                    .slice(0, 5 - topRecommendations.length);
+                
+                topRecommendations.push(...additionalMovies);
+            }
+            
+            return topRecommendations.slice(0, 5);
+        }
+
+        function showRecommendations() {
+            document.getElementById('selectionScreen').style.display = 'none';
+            document.getElementById('recommendationsScreen').style.display = 'block';
+            
+            const recommendations = generateRecommendations();
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            
+            recommendations.forEach((movie, index) => {
+                const recommendationItem = document.createElement('div');
+                recommendationItem.className = 'recommendation-item';
+                
+                recommendationItem.innerHTML = `
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="background: #ff6b6b; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div style="font-size: 1.3em; font-weight: bold; color: #ffd93d;">${movie.title}</div>
+                            <div style="opacity: 0.8;">(${movie.year}) • Directed by ${movie.director}</div>
+                        </div>
+                        <div style="margin-left: auto; background: #ff6b6b; color: white; padding: 4px 8px; border-radius: 15px; font-size: 0.9em;">
+                            ⭐ ${movie.rating}
+                        </div>
+                    </div>
+                    <div style="opacity: 0.9; line-height: 1.4;">
+                        ${movie.description}
+                    </div>
+                `;
+                
+                recommendationsList.appendChild(recommendationItem);
+            });
+        }
+
+        function restartRecommendation() {
+            document.getElementById('recommendationsScreen').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'block';
+            currentQuestion = 1;
+            userPreferences = [];
+            usedMoviePairs = new Set();
+        }
+    </script>
+</body>
+</html>
